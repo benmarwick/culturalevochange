@@ -1,0 +1,14 @@
+Package: culturalevochange
+Type: Package
+Title: Functions from Crema et al (2014) 'An Approximate Bayesian Computation approach for inferring patterns of cultural evolutionary change'
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: Who to complain to <yourfault@somewhere.net>
+Description: More about what it does (maybe more than one line)
+License: What license is it under?
+Imports:
+    abc,
+    vegan
+LazyData: TRUE
+Suggests: knitr
+VignetteBuilder: knitr
