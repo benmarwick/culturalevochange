@@ -27,8 +27,10 @@ data(arrowhead_data)
 
 numberOfTransmissionEventsPerYear = 1
 
-#this includes zeros for artificial 'gap' timeblocks
+# this includes zeros for artificial 'gap' timeblocks, 
+# otherwise it's similar to rowSums(arrowhead_data) 
 obsSampleSize <- c(2, 0, 3, 0, 21, 0, 21, 0, 56, 54, 0, 30, 41, 52)  
+
 
 startDates <- c(3700, 3600, 3450, 3450, 3200, 3200, 3100, 3100, 3050, 3010, 
                 2930, 2850, 2750, 2600)
@@ -37,7 +39,7 @@ endDates <- c(3600, 3450, 3450, 3200, 3200, 3100, 3100, 3050, 3010, 2930,
               2850, 2750, 2600, 1650)
 
 transmissionEvents <- (startDates - endDates) / numberOfTransmissionEventsPerYear
-# notice that the numnbe
+
 
 start <- numeric()
 end <- numeric()
@@ -49,7 +51,7 @@ for (x in 1:length(obsSampleSize))
   start[x] = timesteps
   if (transmissionEvents[x] > 0)
   {SEQ <- seq.int(timesteps, length.out = transmissionEvents[x])}
-  #notice that the number of transmission events is rounded by the seq.int() function
+  # notice that the number of transmission events is rounded by the seq.int() function
   else {SEQ = timesteps
   }
   end[x] = SEQ[length(SEQ)]
@@ -77,7 +79,7 @@ observed <- as.numeric(morisitaHornDist)
 numOb <- length(observed)
 
 # bootstrap analysis
-nBoots <- 1000  #define number of bootstrap simulations
+nBoots <- 1000  # define number of bootstrap simulations
 bootRes <- matrix(NA, ncol = numOb, nrow = nBoots)
 
 
@@ -89,6 +91,53 @@ for (x in 1:nBoots) {
     bootRes[x, ] <- as.numeric(vegdist(tmp, "horn"))
 }
 ```
+
+Plot the observed relationship between distance in time (Δ) and Morisita–Horn dissimilarity (DMH).
+
+```{r}
+# Fig 2
+
+# reshape distance matrix
+library(reshape2)
+morisitaHornDist_m <- as.matrix(morisitaHornDist)
+m2 <- melt(morisitaHornDist_m)[melt(upper.tri(morisitaHornDist_m))$value,]
+names(m2) <- c("c1", "c2", "distance")
+
+# compute t1-t2
+m2$c1a <- as.numeric(substr(m2$c1, 1, 4))
+m2$c2a <- as.numeric(substr(m2$c2, 1, 4))
+m2$delta_t <- with(m2, c1a - c2a)
+
+# fit exponential model
+fit <-  nls(distance ~ SSasymp(delta_t, Asym, R0, lrc), data = m2)
+summary(fit)
+# Residual sum of squares
+RSS.p <- sum(residuals(fit)^2)
+# Total sum of squares
+TSS <- sum((m2$distance - mean(m2$distance))^2)
+# R-squared measure
+r2 <- 1 - (RSS.p/TSS)
+
+
+# plot with loess and exponential line 
+library(ggplot2)
+ggplot(m2, aes(delta_t, distance)) +
+geom_point() +
+geom_smooth(se = FALSE,
+            colour = 'red') +
+geom_smooth(method = "nls", 
+            formula = y ~ SSasymp(x, Asym, R0, lrc), 
+            se = FALSE) +
+  xlab("distance in time (Δ)") +
+  ylab("Morisita–Horn dissimilarity (DMH)")
+
+
+
+```
+
+
+
+
 
 ## Define parameters for simulation
 
